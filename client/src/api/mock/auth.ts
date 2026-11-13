@@ -23,6 +23,7 @@ function toPublicUser(user: StoredUser): User {
     name: user.name,
     email: user.email,
     role: user.role,
+    active: user.active,
   }
 }
 
@@ -60,6 +61,7 @@ export async function mockRegister(input: RegisterInput): Promise<User> {
     email,
     role: 'employee',
     password: input.password,
+    active: true,
     createdAt: new Date().toISOString(),
   }
 

@@ -19,4 +19,25 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui exports a cva variant helper next to the component. Allowing
+    // those names keeps the generated files untouched.
+    files: [
+      'src/components/ui/button.tsx',
+      'src/components/ui/badge.tsx',
+      'src/components/ui/tabs.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowExportNames: [
+            'buttonVariants',
+            'badgeVariants',
+            'tabsListVariants',
+          ],
+        },
+      ],
+    },
+  },
 ])

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail } from 'lucide-react'
+import { LoaderCircle, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -9,8 +9,8 @@ import { useAuth } from '../auth/context'
 import { homePath } from '../auth/roles'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { PasswordField } from '../components/auth/PasswordField'
-import { Alert } from '../components/ui/Alert'
-import { Button } from '../components/ui/Button'
+import { Button } from '@/components/ui/button'
+import { FeedbackAlert } from '../components/ui/FeedbackAlert'
 import { TextField } from '../components/ui/TextField'
 import { applyApiError } from '../lib/form-errors'
 import { loginSchema, type LoginValues } from '../lib/validation'
@@ -76,8 +76,10 @@ export function LoginPage() {
       </div>
 
       <div className="mt-6 space-y-5">
-        {state.notice ? <Alert variant="success">{state.notice}</Alert> : null}
-        {formError ? <Alert>{formError}</Alert> : null}
+        {state.notice ? (
+          <FeedbackAlert tone="success">{state.notice}</FeedbackAlert>
+        ) : null}
+        {formError ? <FeedbackAlert>{formError}</FeedbackAlert> : null}
 
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <TextField
@@ -98,7 +100,14 @@ export function LoginPage() {
             {...register('password')}
           />
 
-          <Button type="submit" fullWidth loading={isSubmitting}>
+          <Button
+            type="submit"
+            className="h-11 w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : null}
             Sign in
           </Button>
         </form>

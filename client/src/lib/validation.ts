@@ -34,5 +34,20 @@ export const signupSchema = z
     path: ['confirmPassword'],
   })
 
+export const raiseTicketSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(5, 'Give the ticket a short title.')
+    .max(120, 'Title must be 120 characters or fewer.'),
+  description: z
+    .string()
+    .trim()
+    .min(10, 'Describe the issue in at least 10 characters.')
+    .max(4000, 'Description must be 4000 characters or fewer.'),
+  categoryId: z.string().min(1, 'Pick a category.'),
+})
+
 export type LoginValues = z.infer<typeof loginSchema>
 export type SignupValues = z.infer<typeof signupSchema>
+export type RaiseTicketValues = z.infer<typeof raiseTicketSchema>

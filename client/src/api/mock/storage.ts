@@ -4,6 +4,7 @@ import type { Role, User } from '../types'
 // because this data never leaves the browser. Do not copy this into the backend.
 export interface StoredUser extends User {
   password: string
+  active: boolean
   createdAt: string
 }
 
@@ -46,6 +47,7 @@ function seedUsers(): StoredUser[] {
     email: account.email,
     role: account.role,
     password: account.password,
+    active: true,
     createdAt,
   }))
 }

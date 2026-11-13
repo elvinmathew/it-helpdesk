@@ -5,7 +5,9 @@ import {
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from 'react'
-import { cn } from '../../lib/cn'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 export interface TextFieldProps extends ComponentPropsWithoutRef<'input'> {
   label: string
@@ -30,41 +32,38 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
     return (
       <div>
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-slate-700"
-        >
+        <Label htmlFor={inputId} className="text-slate-700">
           {label}
-        </label>
+        </Label>
 
         <div className="relative mt-1.5">
           {startIcon ? (
             <span
-              className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 text-slate-400"
               aria-hidden="true"
             >
               {startIcon}
             </span>
           ) : null}
 
-          <input
+          <Input
             ref={ref}
             id={inputId}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
             className={cn(
-              'h-11 w-full rounded-md border bg-white text-sm text-slate-900 shadow-xs outline-none transition-colors placeholder:text-slate-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500',
-              'focus:border-brand-500 focus:ring-brand-100',
+              'h-11 border-slate-300 bg-white shadow-xs focus-visible:border-brand-500 focus-visible:ring-brand-100',
               startIcon ? 'pl-10' : 'pl-3',
               endAdornment ? 'pr-11' : 'pr-3',
-              error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-300',
+              error &&
+                'border-red-300 focus-visible:border-red-400 focus-visible:ring-red-100',
               className,
             )}
             {...props}
           />
 
           {endAdornment ? (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-1">
+            <div className="absolute inset-y-0 right-0 z-10 flex items-center pr-1">
               {endAdornment}
             </div>
           ) : null}

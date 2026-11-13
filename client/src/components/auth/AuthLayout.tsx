@@ -20,13 +20,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-slate-50">
       <div className="lg:grid lg:min-h-dvh lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <aside className="hidden bg-brand-950 px-10 py-12 lg:flex lg:flex-col lg:justify-between xl:px-16">
+        <div className="hidden bg-brand-950 px-10 py-12 lg:flex lg:flex-col gap-15  xl:px-16">
           <Logo tone="dark" />
 
           <div className="max-w-md py-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">
-              Internal IT support
-            </p>
             <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-white">
               Raise, track, and resolve IT issues.
             </h1>
@@ -49,8 +46,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </dl>
           </div>
 
-          <p className="text-xs text-brand-300">Internal tool</p>
-        </aside>
+        </div>
 
         <main className="flex min-h-dvh flex-col px-5 py-8 sm:px-8 lg:min-h-0 lg:justify-center lg:px-12 lg:py-12">
           <div className="mb-10 lg:hidden">

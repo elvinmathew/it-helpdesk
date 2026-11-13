@@ -1,7 +1,9 @@
 # IT Helpdesk — Client
 
-React + TypeScript + Vite front end for the IT Helpdesk project. This stage
-covers authentication and role-based routing. Ticket features come next.
+React + TypeScript + Vite front end for the IT Helpdesk project. It covers the
+authentication flow, role dashboards, ticket raising, the agent queue (kanban
+and table), and the admin overview. The backend is not required to try it: an
+in-browser mock API is enabled by default.
 
 ## Run
 
@@ -10,8 +12,8 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The app uses an in-browser mock API by default, so
-no backend is needed to try the auth flow.
+Open http://localhost:5173. The app uses the mock API by default, so no backend
+is needed.
 
 ## Demo accounts
 
@@ -22,15 +24,48 @@ no backend is needed to try the auth flow.
 | Admin    | admin@helpdesk.local     | Password123! |
 
 The login page shows one-click buttons for these while mock mode is enabled.
+Signing up always creates an Employee (FR-1).
 
 ## What is implemented
 
-- Login for all three roles, with a single form and role-based redirect
-- Signup, which always creates an Employee (FR-1)
-- JWT session stored in `localStorage`, restored on reload, cleared on logout
-- Role-guarded routes: `/employee`, `/agent`, `/admin`
-- Placeholder dashboards that show the signed-in user and planned features
-- Mock API with the same function signatures the real API will use
+- Login, signup, JWT-style session in `localStorage`, logout, role guards.
+- Employee dashboard: open/resolved counts, my tickets with status and priority
+  filters, search, raise-new-ticket form, ticket detail with comments.
+- Agent dashboard: unassigned/overdue counts, filters (status, priority,
+  category, assignee, title search), kanban board with drag-and-drop status
+  changes, table view with quick actions (assign to me, set status, set
+  priority), ticket detail with status history and comments.
+- Admin dashboard: total/open/overdue/active-agent counts, tickets-by-status
+  chart, tickets per agent, and links to the settings screens.
+- Settings screens for users, statuses, categories, and auto-rules are honest
+  placeholders for the next backend phase.
+- Every status change is written to the ticket history and shown on the detail
+  page. Mock auto-overdue logic uses the default 24-hour rule.
+- shadcn/ui components on a light slate + indigo theme; the auth screens were
+  migrated to the same primitives.
+
+## Mock data
+
+The mock API seeds 20 tickets, the four default statuses, and the ten default
+categories on first run. Timestamps are relative to the current time, so the
+two overdue examples stay overdue.
+
+| Key                             | Contents                        |
+| ------------------------------- | ------------------------------- |
+| `it-helpdesk.mock.users`        | demo users and signups          |
+| `it-helpdesk.mock.tickets`      | tickets                         |
+| `it-helpdesk.mock.comments`     | ticket comments                 |
+| `it-helpdesk.mock.history`      | status-change history           |
+| `it-helpdesk.mock.statuses`     | statuses                        |
+| `it-helpdesk.mock.categories`   | categories                      |
+| `it-helpdesk.mock.data-version` | seed version marker             |
+
+To reset the demo data, clear `localStorage` for the site (DevTools →
+Application → Local storage → Clear) or remove the keys above. The auth session
+lives under `it-helpdesk.token` and `it-helpdesk.user`.
+
+Mock passwords are plain text in `localStorage` because the data never leaves
+the browser. Do not copy that pattern into the backend.
 
 ## Connecting the backend
 
@@ -39,23 +74,47 @@ Environment variables live in `.env.development` and `.env.example`.
 1. Start the Spring Boot API at `http://localhost:8080`.
 2. Set `VITE_USE_MOCK=false`.
 3. Keep `VITE_API_URL=/api` to use the dev proxy, or set an absolute URL. The
-   proxy forwards `/api/*` and strips the `/api` prefix, so the frontend call
-   `/api/auth/login` reaches `/auth/login` on the backend. If your server
-   already exposes routes under `/api`, remove the `rewrite` line in
-   `vite.config.ts`.
-4. The auth layer expects:
+   proxy forwards `/api/*` and strips the `/api` prefix, so `/api/auth/login`
+   reaches `/auth/login` on the backend. If your server already exposes routes
+   under `/api`, remove the `rewrite` line in `vite.config.ts`.
 
-   ```json
-   POST /auth/login    -> { "token": "...", "user": { "id": 1, "name": "...", "email": "...", "role": "employee" } }
-   POST /auth/register -> { "user": { ... } }
-   ```
+### Auth responses
 
-   Token/role naming differences are normalized in `src/api/auth.ts`, including
-   `accessToken`/`jwt` and roles such as `EMPLOYEE` or `ROLE_EMPLOYEE`. Update
-   `normalizeAuthResponse` there if the backend shape differs.
+```json
+POST /auth/login    -> { "token": "...", "user": { "id": 1, "name": "...", "email": "...", "role": "employee" } }
+POST /auth/register -> { "user": { ... } }
+```
 
-5. Backend errors are read from `message`/`error` and `fieldErrors`/`errors`.
-   Errors that match a form field are shown inline; others appear as a banner.
+Token names (`token`, `accessToken`, `jwt`) and role formats (`employee`,
+`EMPLOYEE`, `ROLE_EMPLOYEE`) are normalized in `src/api/auth.ts`. Update
+`normalizeAuthResponse` / `normalizeUser` if the real shape differs.
+
+### Ticket endpoints
+
+| Method | Endpoint                        | Used for                          |
+| ------ | ------------------------------- | --------------------------------- |
+| GET    | `/tickets`                      | list and filters                  |
+| POST   | `/tickets`                      | raise a ticket                    |
+| GET    | `/tickets/{id}`                 | detail, comments, status history  |
+| PATCH  | `/tickets/{id}/status`          | status change (agent/admin)       |
+| PATCH  | `/tickets/{id}/assign`          | assign/unassign (agent/admin)     |
+| PATCH  | `/tickets/{id}/priority`        | priority change (agent/admin)     |
+| POST   | `/tickets/{id}/comments`        | add a comment                     |
+| GET    | `/statuses`                     | status filters and actions        |
+| GET    | `/categories`                   | category filters and raise form   |
+| GET    | `/dashboard/employee`           | employee counts                   |
+| GET    | `/dashboard/agent`              | agent counts                      |
+| GET    | `/dashboard/admin`              | admin counts, chart, workload     |
+
+The project spec lists status and assign actions but no priority endpoint. The
+client assumes `PATCH /tickets/{id}/priority`; change `ticketsApi.setPriority`
+in `src/api/tickets.ts` if the backend uses a different route.
+
+List filters are sent as `statusId`, `priority`, `categoryId`, `assignee`
+(`unassigned` or a user id), and `search`. Response parsing tolerates wrapped
+payloads (`data`, `ticket`, `tickets`) and nested `status`, `category`,
+`createdBy`, and `assignedTo` objects. Errors are read from
+`message`/`error` and `fieldErrors`/`errors`.
 
 ## Scripts
 
@@ -73,9 +132,9 @@ A production build has mock mode off unless `VITE_USE_MOCK=true` is set, so
 
 ```
 src/
-  api/          request client, auth service, mock API, shared types
+  api/          request client, auth/tickets/catalog/dashboard services, mock API
   auth/         session storage, auth context, route guards, role helpers
-  components/   UI primitives, auth layout, app shell
-  lib/          validation schemas, error mapping, small utilities
-  pages/        login, signup, role dashboards, 404
+  components/   shadcn ui primitives, app shell, dashboard and ticket pieces
+  lib/          validation, formatting, error mapping, resource hook, cn
+  pages/        auth, role dashboards, ticket detail/raise, 404, admin placeholders
 ```
