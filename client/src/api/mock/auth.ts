@@ -5,7 +5,12 @@ import {
   type RegisterInput,
   type User,
 } from '../types'
-import { persistUsers, readUsers, type StoredUser } from './storage'
+import {
+  persistUsers,
+  readUsers,
+  toPublicUser,
+  type StoredUser,
+} from './storage'
 
 const LATENCY_MS = 500
 
@@ -15,16 +20,6 @@ function wait(): Promise<void> {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
-}
-
-function toPublicUser(user: StoredUser): User {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    active: user.active,
-  }
 }
 
 export async function mockLogin(input: LoginInput): Promise<AuthResponse> {

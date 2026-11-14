@@ -2,6 +2,7 @@ import type {
   AdminDashboard,
   AgentDashboard,
   EmployeeDashboard,
+  Priority,
   Status,
 } from '../types'
 import { currentUser, getStatuses, listTickets, loadData } from './db'
@@ -13,6 +14,7 @@ function wait(): Promise<void> {
 }
 
 const INACTIVE_STATUS_NAMES = new Set(['resolved', 'closed'])
+const PRIORITIES: Array<Priority | null> = ['high', 'medium', 'low', null]
 
 function isOpen(status: Status): boolean {
   return !INACTIVE_STATUS_NAMES.has(status.name.toLowerCase())
@@ -55,6 +57,9 @@ export async function mockAdminDashboard(): Promise<AdminDashboard> {
   const data = loadData()
   const tickets = listTickets(currentUser(), {})
   const statuses = getStatuses()
+  const openStatusIds = new Set(
+    statuses.filter(isOpen).map((status) => status.id),
+  )
 
   const byStatus = statuses.map((status) => ({
     statusId: status.id,
@@ -62,8 +67,19 @@ export async function mockAdminDashboard(): Promise<AdminDashboard> {
     count: tickets.filter((ticket) => ticket.statusId === status.id).length,
   }))
 
+  const byCategory = data.categories.map((category) => ({
+    categoryId: category.id,
+    categoryName: category.name,
+    count: tickets.filter((ticket) => ticket.categoryId === category.id).length,
+  }))
+
+  const byPriority = PRIORITIES.map((priority) => ({
+    priority,
+    count: tickets.filter((ticket) => ticket.priority === priority).length,
+  }))
+
   const byAgent = data.users
-    .filter((user) => user.role === 'agent' && user.active !== false)
+    .filter((user) => user.role === 'agent' && user.active)
     .map((user) => ({
       agentId: user.id,
       agentName: user.name,
@@ -71,19 +87,22 @@ export async function mockAdminDashboard(): Promise<AdminDashboard> {
     }))
     .sort((left, right) => right.count - left.count)
 
-  const openStatusIds = new Set(
-    statuses.filter(isOpen).map((status) => status.id),
-  )
-
   return {
     totalTickets: tickets.length,
     openTickets: tickets.filter((ticket) => openStatusIds.has(ticket.statusId))
       .length,
-    overdueTickets: tickets.filter((ticket) => ticket.overdue).length,
-    activeAgents: data.users.filter(
-      (user) => user.role === 'agent' && user.active !== false,
+    resolvedTickets: tickets.filter(
+      (ticket) => ticket.statusName.toLowerCase() === 'resolved',
     ).length,
+    overdueTickets: tickets.filter((ticket) => ticket.overdue).length,
+    unassignedTickets: tickets.filter(
+      (ticket) => !ticket.assignedTo && openStatusIds.has(ticket.statusId),
+    ).length,
+    activeAgents: data.users.filter((user) => user.role === 'agent' && user.active)
+      .length,
     byStatus,
+    byCategory,
+    byPriority,
     byAgent,
   }
 }

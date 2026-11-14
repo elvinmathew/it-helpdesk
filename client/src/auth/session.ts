@@ -42,6 +42,7 @@ export function readSession(): AuthResponse | null {
         name: user.name,
         email: user.email,
         role: user.role,
+        active: user.active !== false,
       },
     }
   } catch {

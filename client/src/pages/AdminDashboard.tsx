@@ -1,12 +1,11 @@
 import {
+  ArrowUpRight,
+  ChartColumn,
   Clock3,
   Inbox,
-  LayoutList,
   ListChecks,
-  Tags,
+  Settings,
   Ticket as TicketIcon,
-  Timer,
-  UserCog,
   Users,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -15,37 +14,11 @@ import { AppShell } from '../components/layout/AppShell'
 import { AgentWorkload } from '../components/dashboard/AgentWorkload'
 import { StatCard } from '../components/dashboard/StatCard'
 import { TicketsChart } from '../components/dashboard/TicketsChart'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
 import { useResource } from '../lib/use-resource'
-
-const SETTINGS = [
-  {
-    to: '/admin/users',
-    title: 'Users',
-    description: 'Change roles and deactivate accounts.',
-    icon: UserCog,
-  },
-  {
-    to: '/admin/statuses',
-    title: 'Statuses',
-    description: 'Rename, recolour, reorder, or retire statuses.',
-    icon: ListChecks,
-  },
-  {
-    to: '/admin/categories',
-    title: 'Categories',
-    description: 'Manage the categories employees can pick.',
-    icon: Tags,
-  },
-  {
-    to: '/admin/rules',
-    title: 'Auto-rules',
-    description: 'Edit the timers behind automatic status changes.',
-    icon: Timer,
-  },
-]
 
 export function AdminDashboard() {
   const dashboard = useResource(() => dashboardApi.admin(), 'admin')
@@ -63,26 +36,34 @@ export function AdminDashboard() {
           </p>
         </div>
 
-        <Link
-          to="/agent"
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          <LayoutList className="size-4" aria-hidden="true" />
-          Open ticket queue
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/admin/insights">
+              <ChartColumn className="size-4" aria-hidden="true" />
+              Insights
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/admin/settings">
+              <Settings className="size-4" aria-hidden="true" />
+              Settings
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {dashboard.error ? (
         <FeedbackAlert className="mt-6">
           <div className="flex flex-wrap items-center gap-3">
             <span>{dashboard.error}</span>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={dashboard.reload}
-              className="font-medium underline underline-offset-2"
+              className="border-red-200 bg-white text-red-800"
             >
               Try again
-            </button>
+            </Button>
           </div>
         </FeedbackAlert>
       ) : null}
@@ -131,35 +112,44 @@ export function AdminDashboard() {
         )}
       </div>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold text-slate-900">Settings</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage the pieces that shape the ticket workflow.
-        </p>
+      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <Link to="/admin/insights" className="group">
+          <Card className="h-full gap-0 py-0 shadow-none transition-colors group-hover:border-brand-300">
+            <CardContent className="flex items-start gap-4 p-5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
+                <ChartColumn className="size-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900 group-hover:text-brand-700">
+                  Insights
+                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Category and priority breakdowns, status mix, and agent load.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {SETTINGS.map((item) => {
-            const Icon = item.icon
-
-            return (
-              <Link key={item.to} to={item.to} className="group">
-                <Card className="h-full gap-0 py-0 shadow-none transition-colors group-hover:border-brand-300">
-                  <CardContent className="p-5">
-                    <span className="flex size-9 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <h3 className="mt-3 text-sm font-semibold text-slate-900 group-hover:text-brand-700">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">
-                      {item.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
-        </div>
+        <Link to="/admin/settings" className="group">
+          <Card className="h-full gap-0 py-0 shadow-none transition-colors group-hover:border-brand-300">
+            <CardContent className="flex items-start gap-4 p-5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                <ListChecks className="size-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="flex items-center gap-1 text-sm font-semibold text-slate-900 group-hover:text-brand-700">
+                  Settings
+                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Manage users, statuses, categories, and the overdue rule.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </section>
     </AppShell>
   )

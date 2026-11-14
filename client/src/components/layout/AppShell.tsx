@@ -1,4 +1,11 @@
-import { LayoutDashboard, LogOut, Ticket } from 'lucide-react'
+import {
+  ChartColumn,
+  LayoutDashboard,
+  ListChecks,
+  LogOut,
+  Settings,
+  Ticket,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -9,12 +16,23 @@ import { Button } from '@/components/ui/button'
 import { Logo } from '../Logo'
 import { cn } from '@/lib/utils'
 
-const NAV: Record<Role, Array<{ to: string; label: string; icon: LucideIcon }>> =
-  {
-    employee: [{ to: '/employee', label: 'My tickets', icon: Ticket }],
-    agent: [{ to: '/agent', label: 'Queue', icon: LayoutDashboard }],
-    admin: [{ to: '/admin', label: 'Overview', icon: LayoutDashboard }],
-  }
+interface NavItem {
+  to: string
+  label: string
+  icon: LucideIcon
+  end?: boolean
+}
+
+const NAV: Record<Role, NavItem[]> = {
+  employee: [{ to: '/employee', label: 'My tickets', icon: Ticket }],
+  agent: [{ to: '/agent', label: 'Queue', icon: LayoutDashboard }],
+  admin: [
+    { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
+    { to: '/admin/insights', label: 'Insights', icon: ChartColumn },
+    { to: '/agent', label: 'Queue', icon: ListChecks },
+    { to: '/admin/settings', label: 'Settings', icon: Settings },
+  ],
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
@@ -44,6 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    end={item.end}
                     className={({ isActive }) =>
                       cn(
                         'inline-flex h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',

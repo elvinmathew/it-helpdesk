@@ -2,6 +2,7 @@ import {
   ApiError,
   type Category,
   type Comment,
+  type HelpdeskSettings,
   type Priority,
   type Role,
   type Status,
@@ -22,9 +23,10 @@ const COMMENTS_KEY = `${PREFIX}.comments`
 const HISTORY_KEY = `${PREFIX}.history`
 const STATUSES_KEY = `${PREFIX}.statuses`
 const CATEGORIES_KEY = `${PREFIX}.categories`
+const SETTINGS_KEY = `${PREFIX}.settings`
 
 const HOUR = 60 * 60 * 1000
-const OVERDUE_HOURS = 24
+const DEFAULT_OVERDUE_HOURS = 24
 
 export const OPEN_STATUS_ID = 'status-open'
 
@@ -526,6 +528,36 @@ export function saveHistory(history: StoredHistory[]): void {
   writeJson(HISTORY_KEY, history)
 }
 
+export function saveStatuses(statuses: Status[]): void {
+  writeJson(STATUSES_KEY, statuses)
+}
+
+export function saveCategories(categories: Category[]): void {
+  writeJson(CATEGORIES_KEY, categories)
+}
+
+export function readSettings(): HelpdeskSettings {
+  const stored = readJson<Partial<HelpdeskSettings>>(SETTINGS_KEY)
+  const hours = stored?.overdueHours
+
+  return {
+    overdueHours:
+      typeof hours === 'number' && hours > 0 ? hours : DEFAULT_OVERDUE_HOURS,
+  }
+}
+
+export function writeSettings(settings: HelpdeskSettings): HelpdeskSettings {
+  const next: HelpdeskSettings = {
+    overdueHours:
+      Number.isFinite(settings.overdueHours) && settings.overdueHours > 0
+        ? Math.round(settings.overdueHours)
+        : DEFAULT_OVERDUE_HOURS,
+  }
+
+  writeJson(SETTINGS_KEY, next)
+  return next
+}
+
 export function currentUser(): User {
   const session = readSession()
 
@@ -550,7 +582,7 @@ export function isOverdue(ticket: StoredTicket): boolean {
   if (ticket.assignedTo || ticket.statusId !== OPEN_STATUS_ID) return false
 
   const age = Date.now() - new Date(ticket.createdAt).getTime()
-  return age > OVERDUE_HOURS * HOUR
+  return age > readSettings().overdueHours * HOUR
 }
 
 export function enrichTicket(ticket: StoredTicket, data: MockData): Ticket {
@@ -878,4 +910,86 @@ export function addCommentRecord(
     message: trimmed,
     createdAt: now,
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Admin mutations                               */
+/* -------------------------------------------------------------------------- */
+
+function slug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+export function createStatusRecord(name: string): Status {
+  const statuses = loadData().statuses
+  const trimmed = name.trim()
+
+  if (!trimmed) {
+    throw new ApiError('Give the status a name.', 400, {
+      name: 'Give the status a name.',
+    })
+  }
+
+  if (statuses.some((item) => item.name.toLowerCase() === trimmed.toLowerCase())) {
+    throw new ApiError('That status already exists.', 409, {
+      name: 'That status already exists.',
+    })
+  }
+
+  const status: Status = { id: `status-${slug(trimmed)}`, name: trimmed, active: true }
+  saveStatuses([...statuses, status])
+  return status
+}
+
+export function setStatusActiveRecord(id: string, active: boolean): Status {
+  const statuses = loadData().statuses
+  const status = statuses.find((item) => item.id === id)
+
+  if (!status) throw new ApiError('That status could not be found.', 404)
+
+  const updated: Status = { ...status, active }
+  saveStatuses(statuses.map((item) => (item.id === id ? updated : item)))
+  return updated
+}
+
+export function createCategoryRecord(name: string): Category {
+  const categories = loadData().categories
+  const trimmed = name.trim()
+
+  if (!trimmed) {
+    throw new ApiError('Give the category a name.', 400, {
+      name: 'Give the category a name.',
+    })
+  }
+
+  if (
+    categories.some((item) => item.name.toLowerCase() === trimmed.toLowerCase())
+  ) {
+    throw new ApiError('That category already exists.', 409, {
+      name: 'That category already exists.',
+    })
+  }
+
+  const category: Category = {
+    id: `category-${slug(trimmed)}`,
+    name: trimmed,
+    active: true,
+  }
+  saveCategories([...categories, category])
+  return category
+}
+
+export function setCategoryActiveRecord(id: string, active: boolean): Category {
+  const categories = loadData().categories
+  const category = categories.find((item) => item.id === id)
+
+  if (!category) throw new ApiError('That category could not be found.', 404)
+
+  const updated: Category = { ...category, active }
+  saveCategories(categories.map((item) => (item.id === id ? updated : item)))
+  return updated
 }

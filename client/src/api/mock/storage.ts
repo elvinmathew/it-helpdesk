@@ -83,3 +83,13 @@ export function readUsers(): StoredUser[] {
 export function persistUsers(users: StoredUser[]): void {
   writeUsers(users)
 }
+
+export function toPublicUser(user: StoredUser): User {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+  }
+}

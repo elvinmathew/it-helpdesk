@@ -35,12 +35,15 @@ Signing up always creates an Employee (FR-1).
   category, assignee, title search), kanban board with drag-and-drop status
   changes, table view with quick actions (assign to me, set status, set
   priority), ticket detail with status history and comments.
-- Admin dashboard: total/open/overdue/active-agent counts, tickets-by-status
-  chart, tickets per agent, and links to the settings screens.
-- Settings screens for users, statuses, categories, and auto-rules are honest
-  placeholders for the next backend phase.
+- Admin dashboard: total/open/overdue/active-agent counts, status chart, and
+  per-agent workload.
+- Admin insights: open/resolved/overdue/unassigned counts, status and agent
+  charts, plus category and priority breakdowns.
+- Admin settings: manage user roles and active state, add or retire statuses and
+  categories, and edit the overdue threshold. All changes persist through the
+  mock API.
 - Every status change is written to the ticket history and shown on the detail
-  page. Mock auto-overdue logic uses the default 24-hour rule.
+  page. The overdue rule defaults to 24 hours and can be changed in settings.
 - shadcn/ui components on a light slate + indigo theme; the auth screens were
   migrated to the same primitives.
 
@@ -58,6 +61,7 @@ two overdue examples stay overdue.
 | `it-helpdesk.mock.history`      | status-change history           |
 | `it-helpdesk.mock.statuses`     | statuses                        |
 | `it-helpdesk.mock.categories`   | categories                      |
+| `it-helpdesk.mock.settings`     | overdue-hours rule              |
 | `it-helpdesk.mock.data-version` | seed version marker             |
 
 To reset the demo data, clear `localStorage` for the site (DevTools →
@@ -81,40 +85,53 @@ Environment variables live in `.env.development` and `.env.example`.
 ### Auth responses
 
 ```json
-POST /auth/login    -> { "token": "...", "user": { "id": 1, "name": "...", "email": "...", "role": "employee" } }
+POST /auth/login    -> { "token": "...", "user": { "id": "1", "name": "...", "email": "...", "role": "employee", "active": true } }
 POST /auth/register -> { "user": { ... } }
 ```
 
-Token names (`token`, `accessToken`, `jwt`) and role formats (`employee`,
-`EMPLOYEE`, `ROLE_EMPLOYEE`) are normalized in `src/api/auth.ts`. Update
-`normalizeAuthResponse` / `normalizeUser` if the real shape differs.
+The client uses exactly this shape. If the backend differs (for example
+`accessToken` or `data` envelopes), change `src/api/auth.ts` rather than adding
+tolerance across the whole API layer.
 
 ### Ticket endpoints
 
-| Method | Endpoint                        | Used for                          |
+| Method | Endpoint                        | Response                          |
 | ------ | ------------------------------- | --------------------------------- |
-| GET    | `/tickets`                      | list and filters                  |
-| POST   | `/tickets`                      | raise a ticket                    |
-| GET    | `/tickets/{id}`                 | detail, comments, status history  |
-| PATCH  | `/tickets/{id}/status`          | status change (agent/admin)       |
-| PATCH  | `/tickets/{id}/assign`          | assign/unassign (agent/admin)     |
-| PATCH  | `/tickets/{id}/priority`        | priority change (agent/admin)     |
-| POST   | `/tickets/{id}/comments`        | add a comment                     |
-| GET    | `/statuses`                     | status filters and actions        |
-| GET    | `/categories`                   | category filters and raise form   |
-| GET    | `/dashboard/employee`           | employee counts                   |
-| GET    | `/dashboard/agent`              | agent counts                      |
-| GET    | `/dashboard/admin`              | admin counts, chart, workload     |
+| GET    | `/tickets`                      | `Ticket[]`                        |
+| POST   | `/tickets`                      | `Ticket`                          |
+| GET    | `/tickets/{id}`                 | `TicketDetail` (comments, history)|
+| PATCH  | `/tickets/{id}/status`          | `204` (callers reload)            |
+| PATCH  | `/tickets/{id}/assign`          | `204` (callers reload)            |
+| PATCH  | `/tickets/{id}/priority`        | `204` (callers reload)            |
+| POST   | `/tickets/{id}/comments`        | `Comment`                         |
+| GET    | `/statuses`                     | `Status[]`                        |
+| GET    | `/categories`                   | `Category[]`                      |
+| GET    | `/dashboard/employee`           | `EmployeeDashboard`               |
+| GET    | `/dashboard/agent`              | `AgentDashboard`                  |
+| GET    | `/dashboard/admin`              | `AdminDashboard`                  |
+
+### Admin endpoints
+
+| Method | Endpoint                    | Response            |
+| ------ | --------------------------- | ------------------- |
+| GET    | `/admin/users`              | `User[]`            |
+| PATCH  | `/admin/users/{id}/role`    | `User`              |
+| PATCH  | `/admin/users/{id}/active`  | `User`              |
+| POST   | `/admin/statuses`           | `Status`            |
+| PATCH  | `/admin/statuses/{id}`      | `Status`            |
+| POST   | `/admin/categories`         | `Category`          |
+| PATCH  | `/admin/categories/{id}`    | `Category`          |
+| GET    | `/admin/settings`           | `HelpdeskSettings`  |
+| PUT    | `/admin/settings`           | `HelpdeskSettings`  |
 
 The project spec lists status and assign actions but no priority endpoint. The
 client assumes `PATCH /tickets/{id}/priority`; change `ticketsApi.setPriority`
 in `src/api/tickets.ts` if the backend uses a different route.
 
 List filters are sent as `statusId`, `priority`, `categoryId`, `assignee`
-(`unassigned` or a user id), and `search`. Response parsing tolerates wrapped
-payloads (`data`, `ticket`, `tickets`) and nested `status`, `category`,
-`createdBy`, and `assignedTo` objects. Errors are read from
-`message`/`error` and `fieldErrors`/`errors`.
+(`unassigned` or a user id), and `search`. Errors are read from `message` and
+`fieldErrors`. There is no response-shape guessing: each service maps one
+endpoint to one TypeScript type.
 
 ## Scripts
 
@@ -132,9 +149,9 @@ A production build has mock mode off unless `VITE_USE_MOCK=true` is set, so
 
 ```
 src/
-  api/          request client, auth/tickets/catalog/dashboard services, mock API
+  api/          request client, one service per resource, types, mock API
   auth/         session storage, auth context, route guards, role helpers
   components/   shadcn ui primitives, app shell, dashboard and ticket pieces
   lib/          validation, formatting, error mapping, resource hook, cn
-  pages/        auth, role dashboards, ticket detail/raise, 404, admin placeholders
+  pages/        auth, role dashboards, admin insights/settings, tickets, 404
 ```

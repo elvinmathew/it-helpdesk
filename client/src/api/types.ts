@@ -5,7 +5,7 @@ export interface User {
   name: string
   email: string
   role: Role
-  active?: boolean
+  active: boolean
 }
 
 export interface AuthResponse {
@@ -67,7 +67,6 @@ export interface Ticket {
   assignedToName: string | null
   createdAt: string
   updatedAt: string
-  overdue: boolean
 }
 
 export interface Comment {
@@ -106,7 +105,6 @@ export interface TicketFilters {
   statusId?: string
   priority?: Priority
   categoryId?: string
-  assigneeId?: string
   /** 'unassigned' matches tickets without an assignee. */
   assignee?: string
   search?: string
@@ -128,6 +126,17 @@ export interface StatusCount {
   count: number
 }
 
+export interface CategoryCount {
+  categoryId: string
+  categoryName: string
+  count: number
+}
+
+export interface PriorityCount {
+  priority: Priority | null
+  count: number
+}
+
 export interface AgentCount {
   agentId: string
   agentName: string
@@ -137,8 +146,16 @@ export interface AgentCount {
 export interface AdminDashboard {
   totalTickets: number
   openTickets: number
+  resolvedTickets: number
   overdueTickets: number
+  unassignedTickets: number
   activeAgents: number
   byStatus: StatusCount[]
+  byCategory: CategoryCount[]
+  byPriority: PriorityCount[]
   byAgent: AgentCount[]
+}
+
+export interface HelpdeskSettings {
+  overdueHours: number
 }

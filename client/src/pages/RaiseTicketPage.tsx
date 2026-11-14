@@ -32,7 +32,10 @@ export function RaiseTicketPage() {
   const navigate = useNavigate()
   const [formError, setFormError] = useState<string | null>(null)
   const categories = useResource(
-    () => catalogApi.categories(true),
+    () =>
+      catalogApi
+        .categories()
+        .then((items) => items.filter((category) => category.active)),
     'raise-categories',
   )
 

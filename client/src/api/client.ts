@@ -1,5 +1,4 @@
 import { getToken } from '../auth/session'
-import { firstString, isRecord } from '../lib/guards'
 import { ApiError, type FieldErrors } from './types'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '')
@@ -13,6 +12,10 @@ interface RequestOptions {
   method?: Method
   body?: unknown
   signal?: AbortSignal
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 export async function request<T>(
@@ -50,31 +53,13 @@ export async function request<T>(
     )
   }
 
-  const data = await readBody(response)
+  const data = await JSON.parse(await response.text().catch(() => '{}')).catch(() => ({}))
 
   if (!response.ok) {
     throw toApiError(response.status, data)
   }
 
   return data as T
-}
-
-async function readBody(response: Response): Promise<unknown> {
-  if (response.status === 204) {
-    return null
-  }
-
-  const text = await response.text()
-
-  if (!text) {
-    return null
-  }
-
-  try {
-    return JSON.parse(text)
-  } catch {
-    return text
-  }
 }
 
 function toApiError(status: number, payload: unknown): ApiError {
@@ -84,11 +69,11 @@ function toApiError(status: number, payload: unknown): ApiError {
 
   const data = isRecord(payload) ? payload : {}
   const message =
-    firstString(data.message) ??
-    firstString(data.error) ??
-    defaultMessage(status)
+    typeof data.message === 'string' && data.message.trim()
+      ? data.message
+      : defaultMessage(status)
 
-  return new ApiError(message, status, readFieldErrors(data.fieldErrors ?? data.errors))
+  return new ApiError(message, status, readFieldErrors(data.fieldErrors))
 }
 
 function readFieldErrors(value: unknown): FieldErrors | undefined {
@@ -97,8 +82,10 @@ function readFieldErrors(value: unknown): FieldErrors | undefined {
   }
 
   const entries = Object.entries(value).flatMap(([field, raw]) => {
-    const message = Array.isArray(raw) ? firstString(raw[0]) : firstString(raw)
-    return message ? [[field, message] as const] : []
+    const message = Array.isArray(raw) ? raw[0] : raw
+    return typeof message === 'string' && message.trim()
+      ? [[field, message] as const]
+      : []
   })
 
   return entries.length > 0 ? Object.fromEntries(entries) : undefined
