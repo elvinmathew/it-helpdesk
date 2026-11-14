@@ -60,8 +60,6 @@ export function TicketFilters({
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {showSearch ? (
-          // Remounting on the applied term keeps the uncontrolled input in
-          // sync with URL changes without an effect.
           <form
             key={value.search ?? 'all'}
             onSubmit={submitSearch}

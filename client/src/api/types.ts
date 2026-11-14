@@ -67,6 +67,7 @@ export interface Ticket {
   assignedToName: string | null
   createdAt: string
   updatedAt: string
+  overdue: boolean
 }
 
 export interface Comment {

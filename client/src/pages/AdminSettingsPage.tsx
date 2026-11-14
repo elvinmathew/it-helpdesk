@@ -37,7 +37,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
 import { errorMessage } from '../lib/errors'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 
 const ROLE_LABELS: Record<Role, string> = {
   employee: 'Employee',
@@ -55,7 +55,7 @@ export function AdminSettingsPage() {
   const [newStatus, setNewStatus] = useState('')
   const [newCategory, setNewCategory] = useState('')
 
-  const resource = useResource(
+  const resource = useAsyncData(
     () =>
       Promise.all([
         adminApi.users(),

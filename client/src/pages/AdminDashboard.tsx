@@ -18,10 +18,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 
 export function AdminDashboard() {
-  const dashboard = useResource(() => dashboardApi.admin(), 'admin')
+  const dashboard = useAsyncData(() => dashboardApi.admin(), 'admin')
 
   return (
     <AppShell>

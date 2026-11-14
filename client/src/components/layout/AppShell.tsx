@@ -1,5 +1,4 @@
 import {
-  ChartColumn,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -28,7 +27,6 @@ const NAV: Record<Role, NavItem[]> = {
   agent: [{ to: '/agent', label: 'Queue', icon: LayoutDashboard }],
   admin: [
     { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
-    { to: '/admin/insights', label: 'Insights', icon: ChartColumn },
     { to: '/agent', label: 'Queue', icon: ListChecks },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
   ],

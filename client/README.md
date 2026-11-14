@@ -152,6 +152,6 @@ src/
   api/          request client, one service per resource, types, mock API
   auth/         session storage, auth context, route guards, role helpers
   components/   shadcn ui primitives, app shell, dashboard and ticket pieces
-  lib/          validation, formatting, error mapping, resource hook, cn
+  lib/          validation, formatting, error mapping, async data hook, cn
   pages/        auth, role dashboards, admin insights/settings, tickets, 404
 ```

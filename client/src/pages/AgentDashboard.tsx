@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
 import { errorMessage } from '../lib/errors'
 import { PRIORITY_LABELS } from '../lib/ticket-meta'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 
 type View = 'kanban' | 'table'
 
@@ -56,15 +56,15 @@ export function AgentDashboard() {
   const [pendingTicketId, setPendingTicketId] = useState<string | null>(null)
   const filters = readFilters(searchParams)
 
-  const dashboard = useResource(() => dashboardApi.agent(), 'agent')
-  const catalog = useResource(
+  const dashboard = useAsyncData(() => dashboardApi.agent(), 'agent')
+  const catalog = useAsyncData(
     () =>
       Promise.all([catalogApi.statuses(), catalogApi.categories()]).then(
         ([statuses, categories]) => ({ statuses, categories }),
       ),
     'agent-catalog',
   )
-  const tickets = useResource(
+  const tickets = useAsyncData(
     () => ticketsApi.list(filters),
     JSON.stringify(filters),
   )
@@ -98,17 +98,6 @@ export function AgentDashboard() {
     const status = statuses.find((item) => item.id === statusId)
     if (!status) return
 
-    const snapshot = tickets.data
-
-    tickets.mutate((current) =>
-      current
-        ? current.map((ticket) =>
-            ticket.id === ticketId
-              ? { ...ticket, statusId, statusName: status.name }
-              : ticket,
-          )
-        : current,
-    )
     setPendingTicketId(ticketId)
 
     try {
@@ -116,7 +105,6 @@ export function AgentDashboard() {
       toast.success(`Moved to ${status.name}`)
       dashboard.reload()
     } catch (error) {
-      tickets.mutate(() => snapshot)
       toast.error(errorMessage(error))
     } finally {
       setPendingTicketId(null)

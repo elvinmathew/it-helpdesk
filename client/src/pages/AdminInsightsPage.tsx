@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
 import { PRIORITY_LABELS } from '../lib/ticket-meta'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 import { cn } from '@/lib/utils'
 
 function BreakdownRow({
@@ -120,7 +120,7 @@ function PriorityBreakdown({ data }: { data: PriorityCount[] }) {
 }
 
 export function AdminInsightsPage() {
-  const dashboard = useResource(() => dashboardApi.admin(), 'admin-insights')
+  const dashboard = useAsyncData(() => dashboardApi.admin(), 'admin-insights')
   const data = dashboard.data
   const loading = dashboard.loading && !data
 

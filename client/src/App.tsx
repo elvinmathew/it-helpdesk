@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
@@ -10,30 +10,10 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { RaiseTicketPage } from './pages/RaiseTicketPage'
 import { SignupPage } from './pages/SignupPage'
 import { TicketDetailPage } from './pages/TicketDetailPage'
-
-// The kanban board (dnd) and the admin charts (recharts) are the heaviest
-// dependencies, so their pages load on demand.
-const AgentDashboard = lazy(() =>
-  import('./pages/AgentDashboard').then((module) => ({
-    default: module.AgentDashboard,
-  })),
-)
-const AdminDashboard = lazy(() =>
-  import('./pages/AdminDashboard').then((module) => ({
-    default: module.AdminDashboard,
-  })),
-)
-const AdminInsightsPage = lazy(() =>
-  import('./pages/AdminInsightsPage').then((module) => ({
-    default: module.AdminInsightsPage,
-  })),
-)
-const AdminSettingsPage = lazy(() =>
-  import('./pages/AdminSettingsPage').then((module) => ({
-    default: module.AdminSettingsPage,
-  })),
-)
-
+import { AdminDashboard } from './pages/AdminDashboard'
+import { AdminInsightsPage } from './pages/AdminInsightsPage'
+import { AdminSettingsPage } from './pages/AdminSettingsPage'
+import { AgentDashboard } from './pages/AgentDashboard'
 function RouteFallback() {
   return (
     <div className="grid min-h-dvh place-items-center bg-slate-50">

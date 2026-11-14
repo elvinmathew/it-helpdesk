@@ -38,7 +38,7 @@ import {
   PRIORITY_LABELS,
   relativeTime,
 } from '../lib/ticket-meta'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 
 const NO_PRIORITY = 'none'
 
@@ -57,8 +57,8 @@ export function TicketDetailPage() {
   const [submittingComment, setSubmittingComment] = useState(false)
   const [pending, setPending] = useState(false)
 
-  const detail = useResource(() => ticketsApi.get(ticketId), ticketId)
-  const catalog = useResource(() => catalogApi.statuses(), 'detail-statuses')
+  const detail = useAsyncData(() => ticketsApi.get(ticketId), ticketId)
+  const catalog = useAsyncData(() => catalogApi.statuses(), 'detail-statuses')
 
   const canManage = user?.role === 'agent' || user?.role === 'admin'
   const backTo = user?.role === 'employee' ? '/employee' : '/agent'

@@ -22,7 +22,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { applyApiError } from '../lib/form-errors'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 import {
   raiseTicketSchema,
   type RaiseTicketValues,
@@ -31,7 +31,7 @@ import {
 export function RaiseTicketPage() {
   const navigate = useNavigate()
   const [formError, setFormError] = useState<string | null>(null)
-  const categories = useResource(
+  const categories = useAsyncData(
     () =>
       catalogApi
         .categories()

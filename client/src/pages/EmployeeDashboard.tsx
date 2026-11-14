@@ -12,7 +12,7 @@ import { TicketTable } from '../components/tickets/TicketTable'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FeedbackAlert } from '../components/ui/FeedbackAlert'
-import { useResource } from '../lib/use-resource'
+import { useAsyncData } from '../lib/use-async-data'
 
 function readFilters(params: URLSearchParams): Filters {
   return {
@@ -36,12 +36,12 @@ export function EmployeeDashboard() {
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = readFilters(searchParams)
 
-  const dashboard = useResource(() => dashboardApi.employee(), 'employee')
-  const catalog = useResource(
+  const dashboard = useAsyncData(() => dashboardApi.employee(), 'employee')
+  const catalog = useAsyncData(
     () => catalogApi.statuses(),
     'employee-statuses',
   )
-  const tickets = useResource(
+  const tickets = useAsyncData(
     () => ticketsApi.list(filters),
     JSON.stringify(filters),
   )
